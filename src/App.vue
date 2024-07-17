@@ -13,18 +13,21 @@ import { setConfig, getConfig } from "./utils/storage";
 
 import { reactive, computed } from "vue";
 import { watchEffect } from "vue";
+import { useWindowSize } from '@vueuse/core';
 
 const state = reactive(getConfig());
-
 const result = computed(() => calculate(state));
-
 watchEffect(() => setConfig(state));
+
+const { width } = useWindowSize();
+const isSmallScreen = computed(() => width.value < 768);
+const gridCols = computed(() => (isSmallScreen.value ? 1 : 3));
 </script>
 
 <template>
   <n-config-provider style="padding: 20px">
     <NGlobalStyle />
-    <n-grid cols="3" :x-gap="12" :y-gap="12">
+    <n-grid :cols="gridCols" :x-gap="12" :y-gap="12">
       <n-grid-item>
         <label for="equity">Equity</label>
         <n-input-number
@@ -61,7 +64,7 @@ watchEffect(() => setConfig(state));
       </n-grid-item>
     </n-grid>
     <br />
-    <n-grid cols="2" :x-gap="12" :y-gap="12">
+    <n-grid :cols="isSmallScreen.value ? 1 : 2" :x-gap="12" :y-gap="12">
       <n-grid-item>
         <n-card title="Target">
           <strong style="font-size: x-large; color: #555">

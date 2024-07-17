@@ -11,23 +11,35 @@ import { calculate } from "./utils/calculator";
 import { format } from "./utils/format";
 import { setConfig, getConfig } from "./utils/storage";
 
-import { reactive, computed } from "vue";
+import { reactive, computed, onMounted, onUnmounted } from "vue";
 import { watchEffect } from "vue";
-import { useWindowSize } from '@vueuse/core';
 
 const state = reactive(getConfig());
 const result = computed(() => calculate(state));
 watchEffect(() => setConfig(state));
 
-const { width } = useWindowSize();
-const isSmallScreen = computed(() => width.value < 768);
-const gridCols = computed(() => (isSmallScreen.value ? 1 : 3));
+const gridCols = reactive({ main: 3, summary: 2 });
+
+const updateGridCols = () => {
+  const width = window.innerWidth;
+  gridCols.main = width < 768 ? 1 : 3;
+  gridCols.summary = width < 768 ? 1 : 2;
+};
+
+onMounted(() => {
+  updateGridCols();
+  window.addEventListener("resize", updateGridCols);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("resize", updateGridCols);
+});
 </script>
 
 <template>
   <n-config-provider style="padding: 20px">
     <NGlobalStyle />
-    <n-grid :cols="gridCols" :x-gap="12" :y-gap="12">
+    <n-grid :cols="gridCols.main" :x-gap="12" :y-gap="12">
       <n-grid-item>
         <label for="equity">Equity</label>
         <n-input-number
@@ -64,7 +76,7 @@ const gridCols = computed(() => (isSmallScreen.value ? 1 : 3));
       </n-grid-item>
     </n-grid>
     <br />
-    <n-grid :cols="isSmallScreen.value ? 1 : 2" :x-gap="12" :y-gap="12">
+    <n-grid :cols="gridCols.summary" :x-gap="12" :y-gap="12">
       <n-grid-item>
         <n-card title="Target">
           <strong style="font-size: x-large; color: #555">
